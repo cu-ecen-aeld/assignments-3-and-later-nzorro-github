@@ -112,87 +112,89 @@ int main(void)
         perror("sigaction");
         exit(1);
     }
+    if (!fork())
+    {
 
-    printf("server: waiting for connections...\n");
+        printf("server: waiting for connections...\n");
 
-    const int max_size = 32768;
-    char buffer[max_size + 1];
-    memset(buffer, 0, sizeof(buffer));
+        const int max_size = 32768;
+        char buffer[max_size + 1];
+        memset(buffer, 0, sizeof(buffer));
 
-    const char *filename = "/var/tmp/aesdsocketdata";
-    FILE *file = fopen(filename, "w");
-    fclose(file);
+        const char *filename = "/var/tmp/aesdsocketdata";
+        FILE *file = fopen(filename, "w");
+        fclose(file);
 
-    while (1)
-    { // main accept() loop
-        sin_size = sizeof their_addr;
-        new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-        if (new_fd == -1)
-        {
-            perror("accept");
-            continue;
-        }
-
-        inet_ntop(their_addr.ss_family,
-                  get_in_addr((struct sockaddr *)&their_addr),
-                  s, sizeof s);
-        printf("server: got connection from %s\n", s);
-
-        if (!fork())
-        { // this is the child process
-            // close(sockfd); // child doesn't need the listener
-            FILE *file = fopen(filename, "a+");
-            if (!file)
+        while (1)
+        { // main accept() loop
+            sin_size = sizeof their_addr;
+            new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+            if (new_fd == -1)
             {
-                perror("file open");
-                fclose(file);
-            }
-            int totalBytes = 0;
-            int ec = 0;
-            while ((ec = recv(new_fd, &buffer[totalBytes], 1, 0)) != 0)
-            {
-
-                if (ec == 0 || buffer[totalBytes] == '\n')
-                    break;
-
-                totalBytes++;
+                perror("accept");
+                continue;
             }
 
-            printf("\nTotal bytes received: %d\n", totalBytes);
+            inet_ntop(their_addr.ss_family,
+                      get_in_addr((struct sockaddr *)&their_addr),
+                      s, sizeof s);
+            printf("server: got connection from %s\n", s);
 
-            for (int i = 0; i <= (totalBytes); ++i)
-            {
-                fprintf(file, "%c", buffer[i]);
-            }
-            if (fseek(file, 0, SEEK_SET) != 0)
-            {
-                perror("file when seeking");
-                fclose(file);
-            }
-            int readBytes = 0;
-            char charbuf;
-            char newline = '\n';
-            while (fscanf(file, "%c", &charbuf) != EOF)
-            {
-                printf("%c", charbuf);
-
-                if (send(new_fd, &charbuf, 1, 0) == -1)
+            if (!fork())
+            { // this is the child process
+                // close(sockfd); // child doesn't need the listener
+                FILE *file = fopen(filename, "a+");
+                if (!file)
                 {
-                    perror("send");
-
-                    close(new_fd);
+                    perror("file open");
                     fclose(file);
-                    exit(0);
                 }
-                readBytes++;
+                int totalBytes = 0;
+                int ec = 0;
+                while ((ec = recv(new_fd, &buffer[totalBytes], 1, 0)) != 0)
+                {
+
+                    if (ec == 0 || buffer[totalBytes] == '\n')
+                        break;
+
+                    totalBytes++;
+                }
+
+                printf("\nTotal bytes received: %d\n", totalBytes);
+
+                for (int i = 0; i <= (totalBytes); ++i)
+                {
+                    fprintf(file, "%c", buffer[i]);
+                }
+                if (fseek(file, 0, SEEK_SET) != 0)
+                {
+                    perror("file when seeking");
+                    fclose(file);
+                }
+                int readBytes = 0;
+                char charbuf;
+                char newline = '\n';
+                while (fscanf(file, "%c", &charbuf) != EOF)
+                {
+                    printf("%c", charbuf);
+
+                    if (send(new_fd, &charbuf, 1, 0) == -1)
+                    {
+                        perror("send");
+
+                        close(new_fd);
+                        fclose(file);
+                        exit(0);
+                    }
+                    readBytes++;
+                }
+
+                printf("\nTotal bytes read: %d\n", readBytes);
+
+                fclose(file);
+                close(new_fd); // parent doesn't need this
             }
-
-            printf("\nTotal bytes read: %d\n", readBytes);
-
-            fclose(file);
-            close(new_fd); // parent doesn't need this
         }
     }
-
     return 0;
 }
