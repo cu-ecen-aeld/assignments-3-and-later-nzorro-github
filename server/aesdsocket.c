@@ -112,7 +112,7 @@ int main(void)
         perror("sigaction");
         exit(1);
     }
-    
+
     if (!fork())
     {
 
@@ -143,7 +143,7 @@ int main(void)
 
             if (!fork())
             { // this is the child process
-                // close(sockfd); // child doesn't need the listener
+                
                 FILE *file = fopen(filename, "a+");
                 if (!file)
                 {
