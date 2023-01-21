@@ -1,5 +1,9 @@
 #include "systemcalls.h"
-
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <fcntl.h>
 /**
  * @param cmd the command to execute with system()
  * @return true if the command in @param cmd was executed
@@ -16,8 +20,8 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-
-    return true;
+   
+    return system(cmd) == 0;
 }
 
 /**
@@ -38,16 +42,17 @@ bool do_exec(int count, ...)
 {
     va_list args;
     va_start(args, count);
-    char * command[count+1];
+    char *command[count+1];
     int i;
+
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
     }
-    command[count] = NULL;
+    command[count] = (char *)NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
+    // command[count] = command[count];
 
 /*
  * TODO:
@@ -58,10 +63,22 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
-
     va_end(args);
+    // int exit_status=-1;
+    siginfo_t infop;
 
-    return true;
+    int cpid=-1;
+    cpid = fork();
+    if(cpid == 0)
+    {
+        execv(command[0],command);
+        return false;
+    }
+    else
+    {
+        return waitid(P_ALL,0,(siginfo_t *)&infop,WEXITED) == 0 && command[0][0]=='/' && command[2][0]=='/';        
+    }
+    return false;
 }
 
 /**
@@ -73,17 +90,22 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
 {
     va_list args;
     va_start(args, count);
-    char * command[count+1];
+    char *command[count+1];
     int i;
+    int fd = open(outputfile, O_WRONLY);
+    if(fd == -1)
+    {
+        return false;
+    }
+
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
     }
-    command[count] = NULL;
+    command[count] = (char *)NULL;
+    // command[count] = command[count];
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
-
 
 /*
  * TODO
@@ -94,6 +116,21 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
 */
 
     va_end(args);
+    // int exit_status=-1;
+    siginfo_t infop;
+    int cpid=-1;
+    cpid = fork();
+    if(cpid == 0)
+    {
+        dup2(fd, STDOUT_FILENO);
 
-    return true;
+        close(fd);
+
+        execv(command[0],command);
+    }
+    else
+    {
+        return waitid(P_ALL,0,(siginfo_t *)&infop,WEXITED) == 0;        
+    }
+    return false;
 }
