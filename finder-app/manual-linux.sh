@@ -11,8 +11,8 @@ KERNEL_VERSION=v5.4.50
 BUSYBOX_VERSION=1_33_1
 FINDER_APP_DIR=$(realpath $(dirname $0))
 ARCH=arm64
-CROSS_COMPILE=arm-none-linux-gnueabihf-
-export CROSS_COMPILE=arm-none-linux-gnueabihf-
+CROSS_COMPILE=aarch64-none-linux-gnu-
+export CROSS_COMPILE=aarch64-none-linux-gnu-
 if [ $# -lt 1 ]
 then
 	echo "Using default directory ${OUTDIR} for output"
@@ -39,7 +39,7 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} mrproper
     # make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} clean
     #2 build defconfig
-    make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} menuconfig
+    make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} defconfig
     # make -j 4 ARCH=arm CROSS_COMPILE=${CROSS_COMPILE} modules
     make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} dtbs
     #3 build vmlinuz
@@ -90,7 +90,7 @@ ${CROSS_COMPILE}readelf -a bin/busybox | grep "program interpreter"
 ${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library"
 
 # TODO: Add library dependencies to rootfs
-export SYSROOT=$(arm-none-linux-gnueabihf-gcc -print-sysroot)
+export SYSROOT=$(aarch64-none-linux-gnu-gcc -print-sysroot)
 cd ${OUTDIR}/rootfs
 cp -a ${SYSROOT}/lib/ld-linux-aarch64.so.1 lib
 cp -a ${SYSROOT}/lib64/ld-2.31.so lib
