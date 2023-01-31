@@ -1,2 +1,2 @@
 home is $HOME
-nzoji
+nzorro
