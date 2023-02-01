@@ -11,8 +11,8 @@ if [ -z "${OUTDIR}" ]; then
     echo "No outdir specified, using ${OUTDIR}"
 fi
 
-KERNEL_IMAGE=${OUTDIR}/Image
-INITRD_IMAGE=${OUTDIR}/initramfs.cpio
+KERNEL_IMAGE=${OUTDIR}/zImage
+INITRD_IMAGE=${OUTDIR}/initramfs.cpio.gz
 
 if [ ! -e ${KERNEL_IMAGE} ]; then
     echo "Missing kernel image at ${KERNEL_IMAGE}"
@@ -26,7 +26,7 @@ fi
 
 echo "Booting the kernel"
 # See trick at https://superuser.com/a/1412150 to route serial port output to file
-qemu-system-aarch64 -m 256M -M virt -cpu cortex-a53 -nographic -smp 1 -kernel ${KERNEL_IMAGE} \
+qemu-system-arm -m 256M -M virt  -nographic -smp 1 -kernel ${KERNEL_IMAGE} \
         -chardev stdio,id=char0,mux=on,logfile=${OUTDIR}/serial.log,signal=off \
-        -serial chardev:char0 -mon chardev=char0\
-        -append "rdinit=/bin/sh" #-initrd ${INITRD_IMAGE}
+        -serial chardev:char0 -mon chardev=char0 \
+        -append "rdinit=/bin/sh" -initrd ${INITRD_IMAGE}

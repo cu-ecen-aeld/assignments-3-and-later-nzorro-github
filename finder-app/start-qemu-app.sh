@@ -11,7 +11,7 @@ if [ -z "${OUTDIR}" ]; then
     echo "No outdir specified, using ${OUTDIR}"
 fi
 
-KERNEL_IMAGE=${OUTDIR}/Image
+KERNEL_IMAGE=${OUTDIR}/zImage
 INITRD_IMAGE=${OUTDIR}/initramfs.cpio.gz
 
 if [ ! -e ${KERNEL_IMAGE} ]; then
@@ -26,10 +26,9 @@ fi
 
 echo "Booting the kernel"
 # See trick at https://superuser.com/a/1412150 to route serial port output to file
-qemu-system-aarch64 \
+qemu-system-arm \
         -m 256M \
         -M virt \
-        -cpu cortex-a53 \
         -nographic \
         -smp 1 \
         -kernel ${KERNEL_IMAGE} \

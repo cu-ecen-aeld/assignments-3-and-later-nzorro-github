@@ -10,9 +10,9 @@ KERNEL_REPO=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.gi
 KERNEL_VERSION=v5.4.50
 BUSYBOX_VERSION=1_33_1
 FINDER_APP_DIR=$(realpath $(dirname $0))
-ARCH=arm64
-CROSS_COMPILE=aarch64-none-linux-gnu-
-export CROSS_COMPILE=aarch64-none-linux-gnu-
+ARCH=arm
+CROSS_COMPILE=arm-unknown-linux-gnueabi-
+export CROSS_COMPILE=arm-unknown-linux-gnueabi-
 if [ $# -lt 1 ]
 then
 	echo "Using default directory ${OUTDIR} for output"
@@ -29,7 +29,7 @@ if [ ! -d "${OUTDIR}/linux-stable" ]; then
 	echo "CLONING GIT LINUX STABLE VERSION ${KERNEL_VERSION} IN ${OUTDIR}"
 	git clone ${KERNEL_REPO} --depth 1 --single-branch --branch ${KERNEL_VERSION}
 fi
-if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
+if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage ]; then
     cd linux-stable
     echo "Checking out version ${KERNEL_VERSION}"
     git checkout ${KERNEL_VERSION}
@@ -43,9 +43,12 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     # make -j 4 ARCH=arm CROSS_COMPILE=${CROSS_COMPILE} modules
     make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} dtbs
     #3 build vmlinuz
-    make -j 4 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}
+    make -j 4 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} zImage
+
+    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage  ${OUTDIR}/zImage
+
 else
-    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ${OUTDIR}/Image
+    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage  ${OUTDIR}/zImage
 fi
 
 echo "Adding the Image in outdir"
@@ -56,6 +59,7 @@ if [ -d "${OUTDIR}/rootfs" ]
 then
 	echo "Deleting rootfs directory at ${OUTDIR}/rootfs and starting over"
     sudo rm  -rf ${OUTDIR}/rootfs
+    sudo rm -fr ${OUTDIR}/initramfs.cpio.gz
 fi
 
 # TODO: Create necessary base directories
@@ -80,6 +84,7 @@ else
 fi
 
 # TODO: Make and install busybox
+    sed -i "s/\.\/\_install/\.\/\.\.\/rootfs/g" .config
     make -j 4 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}
     make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} install
 
@@ -90,16 +95,16 @@ ${CROSS_COMPILE}readelf -a bin/busybox | grep "program interpreter"
 ${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library"
 
 # TODO: Add library dependencies to rootfs
-export SYSROOT=$(aarch64-none-linux-gnu-gcc -print-sysroot)
+export SYSROOT=$(arm-unknown-linux-gnueabi-gcc -print-sysroot)
 cd ${OUTDIR}/rootfs
-cp -a ${SYSROOT}/lib/ld-linux-aarch64.so.1 lib
-cp -a ${SYSROOT}/lib64/ld-2.31.so lib
-cp -a ${SYSROOT}/lib64/libm.so.6 lib
-cp -a ${SYSROOT}/lib64/libm-2.31.so lib
-cp -a ${SYSROOT}/lib64/libresolv.so.2 lib
-cp -a ${SYSROOT}/lib64/libresolv-2.31.so lib
-cp -a ${SYSROOT}/lib64/libc.so.6 lib
-cp -a ${SYSROOT}/lib64/libc-2.31.so lib
+cp -a ${SYSROOT}/lib/ld-linux.so.3 lib
+cp -a ${SYSROOT}/lib/ld-2.29.so lib
+cp -a ${SYSROOT}/lib/libm.so.6 lib
+cp -a ${SYSROOT}/lib/libm-2.29.so lib
+cp -a ${SYSROOT}/lib/libresolv.so.2 lib
+cp -a ${SYSROOT}/lib/libresolv-2.29.so lib
+cp -a ${SYSROOT}/lib/libc.so.6 lib
+cp -a ${SYSROOT}/lib/libc-2.29.so lib
 
 # TODO: Make device nodes
 sudo mknod -m 666 dev/null c 1 3
@@ -108,15 +113,18 @@ sudo mknod -m 600 dev/console c 5 1
 
 # TODO: Clean and build the writer utility
 cd $FINDER_APP_DIR
+export CC=${CROSS_COMPILE}gcc
 make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} clean
-make -j 4 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} 
-make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} DESTDIR=${OUTDIR}/rootfs
+make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} 
 
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
 sudo cp autorun-qemu.sh ${OUTDIR}/rootfs/home/
 sudo cp finder-test.sh ${OUTDIR}/rootfs/home/
+sudo cp finder.sh ${OUTDIR}/rootfs/home/
 sudo cp writer ${OUTDIR}/rootfs/home/
+sudo cp -a ../conf  ${OUTDIR}/rootfs/
+sudo cp -a conf ${OUTDIR}/rootfs/home/
 
 cd ${OUTDIR}/rootfs
 
@@ -127,5 +135,5 @@ sudo chown -R root:root *
 cd ${OUTDIR}/rootfs
 find . | cpio -H newc -ov --owner root:root > ../initramfs.cpio
 cd ..
-# gzip initramfs.cpio
+gzip initramfs.cpio
 
