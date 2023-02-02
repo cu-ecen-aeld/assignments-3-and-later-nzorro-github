@@ -18,7 +18,7 @@ int find(int argc, char* argv[])
   const char* fullpath = argc > 1? argv[1]: "\0"; 
   const char* textToWrite = argc > 2? argv[2]: "\0";
 
-  syslog(LOG_DEBUG,"argc= %d fullpath= %s textToWrite= %s", argc, fullpath, textToWrite);
+  // syslog(LOG_DEBUG,"argc=%d fullpath=%s textToWrite=%s", argc, fullpath, textToWrite);
 
   if(strlen(fullpath) < 3)
   {
@@ -30,7 +30,7 @@ int find(int argc, char* argv[])
   }
   else
   {
-    syslog(LOG_DEBUG,"Will attempt to write %s into %s", textToWrite, fullpath);
+    // syslog(LOG_DEBUG,"Will attempt to write %s into %s", textToWrite, fullpath);
     FILE* fp = fopen(fullpath,"a");
     if(fp == 0)
     {
@@ -38,7 +38,7 @@ int find(int argc, char* argv[])
     }
     else
     {
-      fprintf(fp, "%s",textToWrite);
+      fprintf(fp, "%s\n",textToWrite);
       fclose(fp);
     }
   }

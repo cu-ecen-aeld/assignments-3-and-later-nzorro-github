@@ -20,12 +20,11 @@ find()
     fi	
     for file in "${basedir}"/*; do
 	#echo "file-> $file <-"
-
         if [ -n "$file" ] ; then
-            matches="$(grep -i "$tofind" $file | wc -l)"
+            matches=$(grep -i "$tofind" "$file" | wc -l)
             number_of_matches=$(( $number_of_matches + $matches ))
             number_of_files=$(( $number_of_files + 1 ))
-	fi
+    	fi
     done
     echo "The number of files are $number_of_files and the number of matching lines are $number_of_matches"
 }
