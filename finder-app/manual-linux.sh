@@ -7,12 +7,12 @@ set -u
 
 OUTDIR=/tmp/aeld
 KERNEL_REPO=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-KERNEL_VERSION=v5.4.50
+KERNEL_VERSION=v5.1.10
 BUSYBOX_VERSION=1_33_1
 FINDER_APP_DIR=$(realpath $(dirname $0))
-ARCH=arm
-CROSS_COMPILE=arm-unknown-linux-gnueabi-
-export CROSS_COMPILE=arm-unknown-linux-gnueabi-
+ARCH=arm64
+CROSS_COMPILE=aarch64-none-linux-gnu-
+export CROSS_COMPILE=aarch64-none-linux-gnu-
 export PATH=$PATH:${HOME}/x-tools/arm-unknown-linux-gnueabi/bin 
 
 if [ $# -lt 1 ]
@@ -97,16 +97,16 @@ ${CROSS_COMPILE}readelf -a bin/busybox | grep "program interpreter"
 ${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library"
 
 # TODO: Add library dependencies to rootfs
-export SYSROOT=$(arm-unknown-linux-gnueabi-gcc -print-sysroot)
+export SYSROOT=$(aarch64-none-linux-gnu-gcc -print-sysroot)
 cd ${OUTDIR}/rootfs
 cp -a ${SYSROOT}/lib/ld-linux.so.3 lib
-cp -a ${SYSROOT}/lib/ld-2.29.so lib
+cp -a ${SYSROOT}/lib64/ld-2.29.so lib
 cp -a ${SYSROOT}/lib/libm.so.6 lib
-cp -a ${SYSROOT}/lib/libm-2.29.so lib
+cp -a ${SYSROOT}/lib64/libm-2.29.so lib
 cp -a ${SYSROOT}/lib/libresolv.so.2 lib
-cp -a ${SYSROOT}/lib/libresolv-2.29.so lib
+cp -a ${SYSROOT}/lib64/libresolv-2.29.so lib
 cp -a ${SYSROOT}/lib/libc.so.6 lib
-cp -a ${SYSROOT}/lib/libc-2.29.so lib
+cp -a ${SYSROOT}/lib64/libc-2.29.so lib
 
 # TODO: Make device nodes
 sudo mknod -m 666 dev/null c 1 3

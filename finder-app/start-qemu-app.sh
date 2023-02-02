@@ -29,6 +29,7 @@ echo "Booting the kernel"
 qemu-system-aarch64 \
         -m 256M \
         -M virt \
+        -cpu cortex-a53 \
         -nographic \
         -smp 1 \
         -kernel ${KERNEL_IMAGE} \
