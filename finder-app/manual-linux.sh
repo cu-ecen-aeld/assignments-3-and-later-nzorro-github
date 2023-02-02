@@ -31,7 +31,7 @@ if [ ! -d "${OUTDIR}/linux-stable" ]; then
 	echo "CLONING GIT LINUX STABLE VERSION ${KERNEL_VERSION} IN ${OUTDIR}"
 	git clone ${KERNEL_REPO} --depth 1 --single-branch --branch ${KERNEL_VERSION}
 fi
-if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
+if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage ]; then
     cd linux-stable
     echo "Checking out version ${KERNEL_VERSION}"
     git checkout ${KERNEL_VERSION}
@@ -45,12 +45,12 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     # make -j 4 ARCH=arm CROSS_COMPILE=${CROSS_COMPILE} modules
     make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} dtbs
     #3 build vmlinuz
-    make -j 4 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} Image
+    make -j 4 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} zImage
 
-    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image  ${OUTDIR}/Image
+    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage  ${OUTDIR}/zImage
 
 else
-    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image  ${OUTDIR}/Image
+    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage  ${OUTDIR}/zImage
 fi
 
 echo "Adding the Image in outdir"
