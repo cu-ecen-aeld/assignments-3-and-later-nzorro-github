@@ -13,6 +13,8 @@ FINDER_APP_DIR=$(realpath $(dirname $0))
 ARCH=arm
 CROSS_COMPILE=arm-unknown-linux-gnueabi-
 export CROSS_COMPILE=arm-unknown-linux-gnueabi-
+export PATH=$PATH:${HOME}/x-tools/arm-unknown-linux-gnueabi/bin 
+
 if [ $# -lt 1 ]
 then
 	echo "Using default directory ${OUTDIR} for output"
