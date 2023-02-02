@@ -31,7 +31,7 @@ if [ ! -d "${OUTDIR}/linux-stable" ]; then
 	echo "CLONING GIT LINUX STABLE VERSION ${KERNEL_VERSION} IN ${OUTDIR}"
 	git clone ${KERNEL_REPO} --depth 1 --single-branch --branch ${KERNEL_VERSION}
 fi
-if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage ]; then
+if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     cd linux-stable
     echo "Checking out version ${KERNEL_VERSION}"
     git checkout ${KERNEL_VERSION}
@@ -45,12 +45,12 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage ]; then
     # make -j 4 ARCH=arm CROSS_COMPILE=${CROSS_COMPILE} modules
     make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} dtbs
     #3 build vmlinuz
-    make -j 4 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} zImage
+    make -j 4 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} Image
 
-    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage  ${OUTDIR}/zImage
+    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image  ${OUTDIR}/Image
 
 else
-    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/zImage  ${OUTDIR}/zImage
+    cp -fr ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image  ${OUTDIR}/Image
 fi
 
 echo "Adding the Image in outdir"
@@ -99,14 +99,14 @@ ${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library"
 # TODO: Add library dependencies to rootfs
 export SYSROOT=$(aarch64-none-linux-gnu-gcc -print-sysroot)
 cd ${OUTDIR}/rootfs
-cp -a ${SYSROOT}/lib/ld-linux.so.3 lib
-cp -a ${SYSROOT}/lib64/ld-2.29.so lib
-cp -a ${SYSROOT}/lib/libm.so.6 lib
-cp -a ${SYSROOT}/lib64/libm-2.29.so lib
-cp -a ${SYSROOT}/lib/libresolv.so.2 lib
-cp -a ${SYSROOT}/lib64/libresolv-2.29.so lib
-cp -a ${SYSROOT}/lib/libc.so.6 lib
-cp -a ${SYSROOT}/lib64/libc-2.29.so lib
+cp -a ${SYSROOT}/lib/ld-linux-aarch64.so.1 lib
+cp -a ${SYSROOT}/lib64/ld-2.31.so lib
+cp -a ${SYSROOT}/lib64/libm.so.6 lib
+cp -a ${SYSROOT}/lib64/libm-2.31.so lib
+cp -a ${SYSROOT}/lib64/libresolv.so.2 lib
+cp -a ${SYSROOT}/lib64/libresolv-2.31.so lib
+cp -a ${SYSROOT}/lib64/libc.so.6 lib
+cp -a ${SYSROOT}/lib64/libc-2.31.so lib
 
 # TODO: Make device nodes
 sudo mknod -m 666 dev/null c 1 3
