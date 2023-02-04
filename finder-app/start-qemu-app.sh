@@ -1,4 +1,4 @@
-# !/bin/bash
+# !/bin/sh
 # Script to open qemu terminal.
 # Author: Siddhant Jajoo.
 
@@ -11,7 +11,7 @@ if [ -z "${OUTDIR}" ]; then
     echo "No outdir specified, using ${OUTDIR}"
 fi
 
-KERNEL_IMAGE=${OUTDIR}/zImage
+KERNEL_IMAGE=${OUTDIR}/Image
 INITRD_IMAGE=${OUTDIR}/initramfs.cpio.gz
 
 if [ ! -e ${KERNEL_IMAGE} ]; then
@@ -26,9 +26,10 @@ fi
 
 echo "Booting the kernel"
 # See trick at https://superuser.com/a/1412150 to route serial port output to file
-qemu-system-arm \
-        -m 256M \
+qemu-system-aarch64 \
+        -m 1G \
         -M virt \
+        -cpu cortex-a53 \
         -nographic \
         -smp 1 \
         -kernel ${KERNEL_IMAGE} \

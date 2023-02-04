@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ###
 # finds an argument tofind within the filepath directories and subdirectories
